@@ -32,6 +32,8 @@ func Run(dbPath string, interval time.Duration) error {
 		Name: "opencode-hud",
 		Icon: appIcon,
 		Mac: application.MacOptions{
+			// Accessory policy: menu-bar extra with no Dock icon or main menu.
+			ActivationPolicy: application.ActivationPolicyAccessory,
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})

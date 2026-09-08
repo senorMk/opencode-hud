@@ -30,9 +30,8 @@ function shortModel(m) {
   return i >= 0 ? String(m).slice(i + 1) : String(m);
 }
 
-function render(snap) {
-  const t = snap.today.totals;
-  $("day").textContent = snap.today.day;
+function renderDay(rep, recent) {
+  const t = rep.totals;
   $("c-cost").textContent = "$" + t.cost.toFixed(2);
   $("c-msgs").textContent = compact(t.messages);
   $("c-sess").textContent = t.sessions;
@@ -40,14 +39,18 @@ function render(snap) {
   $("c-out").textContent = compact(t.output);
   $("c-cache").textContent = compact(t.cacheRead);
 
-  const active = snap.recent.filter((s) => Date.now() - s.updatedMs < 5 * 60 * 1000);
-  $("active").innerHTML = active.length === 0
-    ? '<p class="muted">No active sessions.</p>'
-    : active.map((s) => `<div class="srow"><div class="t"><span class="agodot">●</span>${esc(s.displayTitle || s.directory)}</div><div class="m">${esc(s.project)} · ${esc(shortModel(s.model))}</div></div>`).join("");
+  if (recent) {
+    const active = recent.filter((s) => Date.now() - s.updatedMs < 5 * 60 * 1000);
+    $("active").innerHTML = active.length === 0
+      ? '<p class="muted">No active sessions.</p>'
+      : active.map((s) => `<div class="srow"><div class="t"><span class="agodot">●</span>${esc(s.displayTitle || s.directory)}</div><div class="m">${esc(s.project)} · ${esc(shortModel(s.model))}</div></div>`).join("");
+  } else {
+    $("active").innerHTML = '<p class="muted">Active sessions only shown for today.</p>';
+  }
 
-  const rows = snap.today.sessions.slice().sort((a, b) => b.updatedMs - a.updatedMs);
+  const rows = rep.sessions.slice().sort((a, b) => b.updatedMs - a.updatedMs);
   $("sessions").innerHTML = rows.length === 0
-    ? '<p class="muted">No sessions today yet.</p>'
+    ? '<p class="muted">No sessions on this day.</p>'
     : rows.map((s) => `
       <div class="srow">
         <div class="t">${esc(s.displayTitle || s.directory)}</div>
@@ -55,16 +58,49 @@ function render(snap) {
         <div class="f"><span class="cost">$${s.cost.toFixed(2)}</span><span class="muted">${compact(s.input + s.output + s.reasoning)} tok · ${ago(s.updatedMs)}</span></div>
       </div>`).join("");
 
-  $("updated").textContent = "Updated " + new Date(snap.at).toLocaleTimeString();
+  $("updated").textContent = "Updated " + new Date().toLocaleTimeString();
   $("live-dot").classList.remove("stale");
   lastOk = Date.now();
 }
 
+function todayStr(d) {
+  d = d || new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${dd}`;
+}
+
+function shiftDay(day, delta) {
+  const d = new Date(day + "T12:00:00");
+  d.setDate(d.getDate() + delta);
+  return todayStr(d);
+}
+
+let viewDay = todayStr();
+
+function syncDateNav() {
+  const today = todayStr();
+  $("day-picker").value = viewDay;
+  $("day-picker").max = today;
+  $("day-next").disabled = viewDay >= today;
+  $("day-today").hidden = viewDay === today;
+}
+
 async function poll() {
+  const live = viewDay === todayStr();
   try {
-    const r = await fetch("/api/snapshot", { cache: "no-store" });
-    if (!r.ok) throw new Error(r.status);
-    render(await r.json());
+    let rep, recent;
+    if (live) {
+      const r = await fetch("/api/snapshot", { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const snap = await r.json();
+      rep = snap.today; recent = snap.recent;
+    } else {
+      const r = await fetch("/api/day?day=" + viewDay, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      rep = await r.json(); recent = null;
+    }
+    renderDay(rep, recent);
   } catch (e) {
     if (Date.now() - lastOk > 5000) $("live-dot").classList.add("stale");
   }
@@ -79,5 +115,11 @@ $("tab-sessions").onclick = () => {
   $("view-sessions").hidden = false; $("view-today").hidden = true;
 };
 
+$("day-prev").onclick = () => { viewDay = shiftDay(viewDay, -1); syncDateNav(); poll(); };
+$("day-next").onclick = () => { viewDay = shiftDay(viewDay, 1); syncDateNav(); poll(); };
+$("day-today").onclick = () => { viewDay = todayStr(); syncDateNav(); poll(); };
+$("day-picker").onchange = (e) => { if (e.target.value) { viewDay = e.target.value; syncDateNav(); poll(); } };
+
+syncDateNav();
 poll();
 setInterval(poll, 2000);

@@ -9,7 +9,12 @@
 <body>
 <header>
   <div class="title">opencode-hud <span id="live-dot" class="dot" title="live"></span></div>
-  <div id="day" class="day"></div>
+  <div class="datenav">
+    <button id="day-prev" title="Previous day">‹</button>
+    <input type="date" id="day-picker">
+    <button id="day-next" title="Next day">›</button>
+    <button id="day-today" hidden>Today</button>
+  </div>
 </header>
 <nav>
   <button id="tab-today" class="active">Today</button>

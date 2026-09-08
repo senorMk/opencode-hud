@@ -16,6 +16,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/senorMk/opencode-hud/internal/service"
 	"github.com/senorMk/opencode-hud/internal/store"
 	"github.com/senorMk/opencode-hud/internal/watcher"
 )
@@ -47,6 +48,7 @@ func New(dbPath string, interval time.Duration) *Server {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/snapshot", s.handleSnapshot)
+	mux.HandleFunc("/api/day", s.handleDay)
 	mux.HandleFunc("/api/history", s.handleHistory)
 	mux.HandleFunc("/api/models", s.handleModels)
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -119,6 +121,29 @@ func (s *Server) handleSnapshot(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	writeJSON(w, snap)
+}
+
+func (s *Server) handleDay(w http.ResponseWriter, r *http.Request) {
+	day := r.URL.Query().Get("day")
+	if _, err := time.Parse("2006-01-02", day); err != nil {
+		http.Error(w, "day must be YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	db, err := store.Open(s.dbPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	rep, err := service.ForDay(db, day)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep.Sessions == nil {
+		rep.Sessions = []store.Session{}
+	}
+	writeJSON(w, rep)
 }
 
 func (s *Server) handleHistory(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,43 @@
+/* IBM Plex Mono, self-hosted — same stack as opencode.ai
+   (--font-mono: "Berkeley Mono", "IBM Plex Mono", ui-monospace, ...) */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/plex-mono-regular-latin1.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+2013-2014, U+2018-201E, U+2020-2022, U+2026, U+2030, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/plex-mono-regular-latin2.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+1E00-1EFF, U+20A0-20CF, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/plex-mono-semibold-latin1.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+2013-2014, U+2018-201E, U+2020-2022, U+2026, U+2030, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/plex-mono-semibold-latin2.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+1E00-1EFF, U+20A0-20CF, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root { color-scheme: dark; }
 * { box-sizing: border-box; }
 body {
-  margin: 0; padding: 12px; font: 13px/1.45 -apple-system, "SF Pro Text", sans-serif;
+  margin: 0; padding: 12px;
+  font: 13px/1.45 "Berkeley Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   background: #1e1e1e; color: #e8e8e8; min-height: 100vh;
 }
 header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
@@ -20,6 +56,16 @@ nav button.active { background: #0a84ff; border-color: #0a84ff; color: #fff; }
 .card .k { color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 .card .v { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 h2 { font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 6px; }
+.datenav { display: flex; gap: 4px; align-items: center; }
+.datenav button {
+  border: 1px solid #383838; background: #2c2c2e; color: #ccc;
+  border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; padding: 3px 8px;
+}
+.datenav button:disabled { opacity: .35; cursor: default; }
+.datenav input[type="date"] {
+  border: 1px solid #383838; background: #2c2c2e; color: #e8e8e8;
+  border-radius: 6px; font: inherit; font-size: 12px; padding: 2px 4px;
+}
 .muted { color: #888; }
 .srow {
   background: #2c2c2e; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;

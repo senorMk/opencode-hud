@@ -39,6 +39,7 @@ go run ./cmd/opencode-hud --tray    # macOS menu-bar extra + attached window
 
 ```sh
 go run ./cmd/opencode-hud --dump-today
+go run ./cmd/opencode-hud --day 2026-09-04   # any local calendar day
 go run ./cmd/opencode-hud --history --days 30
 go run ./cmd/opencode-hud --models-by-date --days 7
 ```

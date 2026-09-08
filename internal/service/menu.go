@@ -20,12 +20,6 @@ type MenuStatus struct {
 	Active  int    `json:"active"`
 }
 
-// dayStartMs returns local-midnight today as ms epoch.
-func dayStartMs(now time.Time) int64 {
-	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	return start.UnixMilli()
-}
-
 // LoadToday loads the full "today" snapshot: sessions, message count,
 // totals and the derived menu status.
 func LoadToday(db *sql.DB, now time.Time, recent []store.Session) (DayReport, MenuStatus, error) {
@@ -33,11 +27,6 @@ func LoadToday(db *sql.DB, now time.Time, recent []store.Session) (DayReport, Me
 	if err != nil {
 		return DayReport{}, MenuStatus{}, err
 	}
-	msgs, err := store.CountMessagesSince(db, dayStartMs(now))
-	if err != nil {
-		return DayReport{}, MenuStatus{}, err
-	}
-	rep.Totals.Messages = msgs
 	return rep, Summarise(rep, recent, now), nil
 }
 

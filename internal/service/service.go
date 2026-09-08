@@ -18,16 +18,20 @@ type Totals struct {
 	Sessions  int64   `json:"sessions"`
 }
 
-// DayReport is the "today" view: sessions plus rolled-up totals.
+// DayReport is the per-day view: sessions plus rolled-up totals.
 type DayReport struct {
 	Day      string          `json:"day"`
 	Totals   Totals          `json:"totals"`
 	Sessions []store.Session `json:"sessions"`
 }
 
-// Today loads all sessions updated on the local calendar day.
+// Today loads the report for the local calendar day containing now.
 func Today(db *sql.DB, now time.Time) (DayReport, error) {
-	day := now.Format("2006-01-02")
+	return ForDay(db, now.Format("2006-01-02"))
+}
+
+// ForDay loads the report for an arbitrary local calendar day (YYYY-MM-DD).
+func ForDay(db *sql.DB, day string) (DayReport, error) {
 	sessions, err := store.DaySessions(db, day)
 	if err != nil {
 		return DayReport{}, err
@@ -41,5 +45,10 @@ func Today(db *sql.DB, now time.Time) (DayReport, error) {
 		rep.Totals.CacheRead += s.CacheRead
 		rep.Totals.Sessions++
 	}
+	msgs, err := store.CountMessagesOnDay(db, day)
+	if err != nil {
+		return DayReport{}, err
+	}
+	rep.Totals.Messages = msgs
 	return rep, nil
 }

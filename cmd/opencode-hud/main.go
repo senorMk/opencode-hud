@@ -23,6 +23,7 @@ import (
 func main() {
 	dbPath := flag.String("db", "", "opencode database path (default: ~/.local/share/opencode/opencode.db)")
 	dumpToday := flag.Bool("dump-today", false, "dump sessions updated today with totals")
+	dayFlag := flag.String("day", "", "dump sessions for an arbitrary day (YYYY-MM-DD)")
 	history := flag.Bool("history", false, "dump per-day history rollup")
 	modelsByDate := flag.Bool("models-by-date", false, "dump per-model-per-day rollup")
 	days := flag.Int("days", 7, "days of history for --history / --models-by-date")
@@ -89,6 +90,17 @@ func main() {
 		if err := enc.Encode(rep); err != nil {
 			fatal(err)
 		}
+	case *dayFlag != "":
+		if _, err := time.Parse("2006-01-02", *dayFlag); err != nil {
+			fatal(fmt.Errorf("invalid --day %q: want YYYY-MM-DD", *dayFlag))
+		}
+		rep, err := service.ForDay(db, *dayFlag)
+		if err != nil {
+			fatal(err)
+		}
+		if err := enc.Encode(rep); err != nil {
+			fatal(err)
+		}
 	case *history:
 		rows, err := store.History(db, *days)
 		if err != nil {
@@ -123,7 +135,7 @@ func main() {
 			fatal(err)
 		}
 	default:
-		fmt.Fprintln(os.Stderr, "usage: opencode-hud --dump-today | --history [--days N] | --models-by-date [--days N] | --recent N | --tray | --tray-print")
+		fmt.Fprintln(os.Stderr, "usage: opencode-hud --dump-today | --day YYYY-MM-DD | --history [--days N] | --models-by-date [--days N] | --recent N | --tray | --tray-print | --serve")
 		os.Exit(2)
 	}
 }

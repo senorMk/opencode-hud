@@ -1,0 +1,19 @@
+# Go
+/bin/
+/dist/
+*.test
+*.out
+
+# Wails
+/frontend/dist/
+/frontend/node_modules/
+build/bin/
+
+# macOS
+.DS_Store
+*.app
+
+# IDE
+.idea/
+.vscode/
+*.swp

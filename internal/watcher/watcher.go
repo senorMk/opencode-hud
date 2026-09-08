@@ -131,8 +131,22 @@ func (w *Watcher) poll(last *store.Fingerprint, first bool) bool {
 }
 
 func (w *Watcher) snapshot(db *sql.DB) (Snapshot, error) {
-	now := time.Now()
-	recent, err := store.RecentSessions(db, w.recentN)
+	return loadSnapshot(db, w.recentN, time.Now())
+}
+
+// LoadSnapshot loads a one-off snapshot outside the poll loop
+// (used to serve the first HTTP request before the watcher ticks).
+func LoadSnapshot(dbPath string, recentN int) (Snapshot, error) {
+	db, err := store.Open(dbPath)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	defer db.Close()
+	return loadSnapshot(db, recentN, time.Now())
+}
+
+func loadSnapshot(db *sql.DB, recentN int, now time.Time) (Snapshot, error) {
+	recent, err := store.RecentSessions(db, recentN)
 	if err != nil {
 		return Snapshot{}, err
 	}

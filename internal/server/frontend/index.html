@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opencode-hud</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+  <div class="title">opencode-hud <span id="live-dot" class="dot" title="live"></span></div>
+  <div id="day" class="day"></div>
+</header>
+<nav>
+  <button id="tab-today" class="active">Today</button>
+  <button id="tab-sessions">Sessions</button>
+</nav>
+<main>
+  <section id="view-today">
+    <div class="cards">
+      <div class="card"><div class="k">Cost</div><div class="v" id="c-cost">–</div></div>
+      <div class="card"><div class="k">Messages</div><div class="v" id="c-msgs">–</div></div>
+      <div class="card"><div class="k">Sessions</div><div class="v" id="c-sess">–</div></div>
+      <div class="card"><div class="k">Input</div><div class="v" id="c-in">–</div></div>
+      <div class="card"><div class="k">Output</div><div class="v" id="c-out">–</div></div>
+      <div class="card"><div class="k">Cache read</div><div class="v" id="c-cache">–</div></div>
+    </div>
+    <h2>Active now</h2>
+    <div id="active"><p class="muted">No active sessions.</p></div>
+  </section>
+  <section id="view-sessions" hidden>
+    <div id="sessions"></div>
+  </section>
+</main>
+<footer><span id="updated" class="muted"></span></footer>
+<script src="/app.js"></script>
+</body>
+</html>

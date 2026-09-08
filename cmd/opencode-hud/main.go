@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/senorMk/opencode-hud/internal/server"
 	"github.com/senorMk/opencode-hud/internal/service"
 	"github.com/senorMk/opencode-hud/internal/store"
 	"github.com/senorMk/opencode-hud/internal/tray"
@@ -28,7 +29,8 @@ func main() {
 	recent := flag.Int("recent", 0, "list N most recently updated sessions")
 	trayMode := flag.Bool("tray", false, "run the macOS menu-bar daemon")
 	trayPrint := flag.Bool("tray-print", false, "headless watcher: print menu-bar label on each snapshot until interrupted")
-	interval := flag.Duration("interval", 2*time.Second, "poll interval for --tray / --tray-print")
+	serve := flag.Bool("serve", false, "run the localhost HUD server (browser preview) and print its URL")
+	interval := flag.Duration("interval", 2*time.Second, "poll interval for --tray / --tray-print / --serve")
 	flag.Parse()
 
 	path := *dbPath
@@ -53,6 +55,18 @@ func main() {
 		if err := tray.Run(path, *interval); err != nil {
 			fatal(err)
 		}
+	case *serve:
+		srv := server.New(path, *interval)
+		url, err := srv.Bind()
+		if err != nil {
+			fatal(err)
+		}
+		defer srv.Close()
+		fmt.Println(url)
+		go func() { _ = srv.Serve() }()
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		<-sig
 	case *trayPrint:
 		w := watcher.New(path, *interval, 10)
 		w.Start()

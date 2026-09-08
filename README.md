@@ -28,7 +28,12 @@ Each of these only sees the session in front of you. If you run three terminals 
 
 ## Status
 
-M1 — read-only data layer + CLI parity dump (in progress). See `cmd/opencode-hud`.
+M3 — menu-bar daemon + HUD window (this repo). Browser preview:
+
+```sh
+go run ./cmd/opencode-hud --serve   # prints http://127.0.0.1:PORT — open it
+go run ./cmd/opencode-hud --tray    # macOS menu-bar extra + attached window
+```
 
 ## Quick start (M1)
 

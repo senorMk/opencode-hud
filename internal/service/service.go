@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/parentalk/opencode-hud/internal/store"
+	"github.com/senorMk/opencode-hud/internal/store"
 )
 
 // Totals aggregates cost + tokens over any set of rows.

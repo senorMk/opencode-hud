@@ -9,10 +9,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/parentalk/opencode-hud/internal/service"
-	"github.com/parentalk/opencode-hud/internal/store"
+	"github.com/senorMk/opencode-hud/internal/service"
+	"github.com/senorMk/opencode-hud/internal/store"
+	"github.com/senorMk/opencode-hud/internal/tray"
+	"github.com/senorMk/opencode-hud/internal/watcher"
 )
 
 func main() {
@@ -22,6 +26,9 @@ func main() {
 	modelsByDate := flag.Bool("models-by-date", false, "dump per-model-per-day rollup")
 	days := flag.Int("days", 7, "days of history for --history / --models-by-date")
 	recent := flag.Int("recent", 0, "list N most recently updated sessions")
+	trayMode := flag.Bool("tray", false, "run the macOS menu-bar daemon")
+	trayPrint := flag.Bool("tray-print", false, "headless watcher: print menu-bar label on each snapshot until interrupted")
+	interval := flag.Duration("interval", 2*time.Second, "poll interval for --tray / --tray-print")
 	flag.Parse()
 
 	path := *dbPath
@@ -42,6 +49,24 @@ func main() {
 	enc.SetIndent("", "  ")
 
 	switch {
+	case *trayMode:
+		if err := tray.Run(path, *interval); err != nil {
+			fatal(err)
+		}
+	case *trayPrint:
+		w := watcher.New(path, *interval, 10)
+		w.Start()
+		defer w.Stop()
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		for {
+			select {
+			case snap := <-w.C():
+				fmt.Printf("%s  %s\n", snap.At.Format("15:04:05"), snap.Status.Label)
+			case <-sig:
+				return
+			}
+		}
 	case *dumpToday:
 		rep, err := service.Today(db, time.Now())
 		if err != nil {
@@ -84,7 +109,7 @@ func main() {
 			fatal(err)
 		}
 	default:
-		fmt.Fprintln(os.Stderr, "usage: opencode-hud --dump-today | --history [--days N] | --models-by-date [--days N] | --recent N")
+		fmt.Fprintln(os.Stderr, "usage: opencode-hud --dump-today | --history [--days N] | --models-by-date [--days N] | --recent N | --tray | --tray-print")
 		os.Exit(2)
 	}
 }

@@ -3,12 +3,19 @@
 package tray
 
 import (
+	_ "embed"
 	"time"
 
 	"github.com/senorMk/opencode-hud/internal/server"
 	"github.com/senorMk/opencode-hud/internal/watcher"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
+
+//go:embed icons/tray-template.png
+var trayTemplateIcon []byte
+
+//go:embed icons/appicon-512.png
+var appIcon []byte
 
 // Run starts the menu-bar daemon and blocks until Quit.
 // dbPath is the opencode database; interval is the poll period.
@@ -23,6 +30,7 @@ func Run(dbPath string, interval time.Duration) error {
 
 	app := application.New(application.Options{
 		Name: "opencode-hud",
+		Icon: appIcon,
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
@@ -37,7 +45,7 @@ func Run(dbPath string, interval time.Duration) error {
 	})
 
 	systray := app.SystemTray.New()
-	systray.SetLabel("opencode…")
+	systray.SetTemplateIcon(trayTemplateIcon)
 	systray.AttachWindow(window)
 	systray.WindowOffset(10)
 
@@ -66,8 +74,8 @@ func Run(dbPath string, interval time.Duration) error {
 
 	go func() {
 		for snap := range w.C() {
-			systray.SetLabel(snap.Status.Label)
 			systray.SetTooltip(snap.Status.Tooltip)
+			statusItem.SetLabel(snap.Status.Label)
 		}
 	}()
 

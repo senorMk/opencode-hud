@@ -43,14 +43,14 @@ function render(snap) {
   const active = snap.recent.filter((s) => Date.now() - s.updatedMs < 5 * 60 * 1000);
   $("active").innerHTML = active.length === 0
     ? '<p class="muted">No active sessions.</p>'
-    : active.map((s) => `<div class="srow"><div class="t"><span class="agodot">●</span>${esc(s.title || s.directory)}</div><div class="m">${esc(s.project)} · ${esc(shortModel(s.model))}</div></div>`).join("");
+    : active.map((s) => `<div class="srow"><div class="t"><span class="agodot">●</span>${esc(s.displayTitle || s.directory)}</div><div class="m">${esc(s.project)} · ${esc(shortModel(s.model))}</div></div>`).join("");
 
   const rows = snap.today.sessions.slice().sort((a, b) => b.updatedMs - a.updatedMs);
   $("sessions").innerHTML = rows.length === 0
     ? '<p class="muted">No sessions today yet.</p>'
     : rows.map((s) => `
       <div class="srow">
-        <div class="t">${esc(s.title || s.directory)}</div>
+        <div class="t">${esc(s.displayTitle || s.directory)}</div>
         <div class="m">${esc(s.project)} · ${esc(shortModel(s.model))} · ${esc(s.agent)}</div>
         <div class="f"><span class="cost">$${s.cost.toFixed(2)}</span><span class="muted">${compact(s.input + s.output + s.reasoning)} tok · ${ago(s.updatedMs)}</span></div>
       </div>`).join("");

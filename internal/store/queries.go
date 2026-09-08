@@ -17,20 +17,21 @@ func dayStartUnix(days int) int64 {
 
 // Session is one row of the session table with the project name joined in.
 type Session struct {
-	ID         string  `json:"id"`
-	Title      string  `json:"title"`
-	Project    string  `json:"project"`
-	Directory  string  `json:"directory"`
-	Agent      string  `json:"agent"`
-	Model      string  `json:"model"` // "provider/model"
-	Cost       float64 `json:"cost"`
-	Input      int64   `json:"input"`
-	Output     int64   `json:"output"`
-	Reasoning  int64   `json:"reasoning"`
-	CacheRead  int64   `json:"cacheRead"`
-	CacheWrite int64   `json:"cacheWrite"`
-	CreatedMs  int64   `json:"createdMs"`
-	UpdatedMs  int64   `json:"updatedMs"`
+	ID           string  `json:"id"`
+	Title        string  `json:"title"`
+	DisplayTitle string  `json:"displayTitle"`
+	Project      string  `json:"project"`
+	Directory    string  `json:"directory"`
+	Agent        string  `json:"agent"`
+	Model        string  `json:"model"` // "provider/model"
+	Cost         float64 `json:"cost"`
+	Input        int64   `json:"input"`
+	Output       int64   `json:"output"`
+	Reasoning    int64   `json:"reasoning"`
+	CacheRead    int64   `json:"cacheRead"`
+	CacheWrite   int64   `json:"cacheWrite"`
+	CreatedMs    int64   `json:"createdMs"`
+	UpdatedMs    int64   `json:"updatedMs"`
 }
 
 // modelRef mirrors the JSON stored in session.model.
@@ -75,7 +76,24 @@ func scanSession(row interface{ Scan(...any) error }) (Session, error) {
 		return Session{}, err
 	}
 	s.Model = NormaliseModel(rawModel)
+	s.DisplayTitle = DisplayTitle(s.Title)
 	return s, nil
+}
+
+// DisplayTitle renders opencode's auto-generated titles readably.
+// opencode names untitled sessions "New session - 2026-09-08T13:39:38.688Z";
+// that becomes "New session · Sep 8, 1:39 PM" (local time).
+func DisplayTitle(title string) string {
+	const prefix = "New session - "
+	if rest, ok := strings.CutPrefix(title, prefix); ok {
+		if ts, err := time.Parse(time.RFC3339, rest); err == nil {
+			return "New session · " + ts.Local().Format("Jan 2, 3:04 PM")
+		}
+	}
+	if title == "" {
+		return "Untitled session"
+	}
+	return title
 }
 
 // DaySessions lists sessions updated on a local calendar day (YYYY-MM-DD).

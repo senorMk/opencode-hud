@@ -25,6 +25,15 @@ type DayReport struct {
 	Sessions []store.Session `json:"sessions"`
 }
 
+// RangeReport is the arbitrary-range view (e.g. a calendar month):
+// sessions plus rolled-up totals over [From, To].
+type RangeReport struct {
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Totals   Totals          `json:"totals"`
+	Sessions []store.Session `json:"sessions"`
+}
+
 // Today loads the report for the local calendar day containing now.
 func Today(db *sql.DB, now time.Time) (DayReport, error) {
 	return ForDay(db, now.Format("2006-01-02"))
@@ -37,18 +46,43 @@ func ForDay(db *sql.DB, day string) (DayReport, error) {
 		return DayReport{}, err
 	}
 	rep := DayReport{Day: day, Sessions: sessions}
-	for _, s := range sessions {
-		rep.Totals.Cost += s.Cost
-		rep.Totals.Input += s.Input
-		rep.Totals.Output += s.Output
-		rep.Totals.Reasoning += s.Reasoning
-		rep.Totals.CacheRead += s.CacheRead
-		rep.Totals.Sessions++
-	}
+	rep.Totals = SumSessions(sessions)
 	msgs, err := store.CountMessagesOnDay(db, day)
 	if err != nil {
 		return DayReport{}, err
 	}
 	rep.Totals.Messages = msgs
 	return rep, nil
+}
+
+// ForRange loads the report for an inclusive local calendar range
+// [from, to] (both YYYY-MM-DD). Callers must validate the format and
+// that from <= to.
+func ForRange(db *sql.DB, from, to string) (RangeReport, error) {
+	sessions, err := store.RangeSessions(db, from, to)
+	if err != nil {
+		return RangeReport{}, err
+	}
+	rep := RangeReport{From: from, To: to, Sessions: sessions}
+	rep.Totals = SumSessions(sessions)
+	msgs, err := store.CountMessagesInRange(db, from, to)
+	if err != nil {
+		return RangeReport{}, err
+	}
+	rep.Totals.Messages = msgs
+	return rep, nil
+}
+
+// SumSessions rolls up cost + tokens over a set of sessions.
+func SumSessions(sessions []store.Session) Totals {
+	var t Totals
+	for _, s := range sessions {
+		t.Cost += s.Cost
+		t.Input += s.Input
+		t.Output += s.Output
+		t.Reasoning += s.Reasoning
+		t.CacheRead += s.CacheRead
+		t.Sessions++
+	}
+	return t
 }

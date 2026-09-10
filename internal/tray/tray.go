@@ -41,9 +41,9 @@ func Run(dbPath string, interval time.Duration) error {
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:     "opencode-hud",
 		URL:       url + "/",
-		Width:     400,
+		Width:     440,
 		Height:    460,
-		MinWidth:  320,
+		MinWidth:  360,
 		MinHeight: 340,
 		Hidden:    true,
 	})

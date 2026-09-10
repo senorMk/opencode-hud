@@ -49,6 +49,7 @@ func New(dbPath string, interval time.Duration) *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/snapshot", s.handleSnapshot)
 	mux.HandleFunc("/api/day", s.handleDay)
+	mux.HandleFunc("/api/range", s.handleRange)
 	mux.HandleFunc("/api/history", s.handleHistory)
 	mux.HandleFunc("/api/models", s.handleModels)
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -136,6 +137,54 @@ func (s *Server) handleDay(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 	rep, err := service.ForDay(db, day)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep.Sessions == nil {
+		rep.Sessions = []store.Session{}
+	}
+	writeJSON(w, rep)
+}
+
+func (s *Server) handleRange(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	from, to := q.Get("from"), q.Get("to")
+	// Convenience: ?month=YYYY-MM expands to the full calendar month.
+	if m := q.Get("month"); m != "" && from == "" && to == "" {
+		month, err := time.Parse("2006-01", m)
+		if err != nil {
+			http.Error(w, "month must be YYYY-MM", http.StatusBadRequest)
+			return
+		}
+		from = month.Format("2006-01-02")
+		to = month.AddDate(0, 1, -1).Format("2006-01-02")
+	}
+	fromT, err := time.Parse("2006-01-02", from)
+	if err != nil {
+		http.Error(w, "from must be YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	toT, err := time.Parse("2006-01-02", to)
+	if err != nil {
+		http.Error(w, "to must be YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	if toT.Before(fromT) {
+		http.Error(w, "to must be >= from", http.StatusBadRequest)
+		return
+	}
+	if toT.Sub(fromT).Hours()/24 > 366 {
+		http.Error(w, "range must be <= 366 days", http.StatusBadRequest)
+		return
+	}
+	db, err := store.Open(s.dbPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	rep, err := service.ForRange(db, from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

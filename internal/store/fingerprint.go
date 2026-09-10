@@ -32,7 +32,13 @@ func CountMessagesSince(db *sql.DB, sinceMs int64) (int64, error) {
 
 // CountMessagesOnDay counts messages created on a local calendar day (YYYY-MM-DD).
 func CountMessagesOnDay(db *sql.DB, day string) (int64, error) {
+	return CountMessagesInRange(db, day, day)
+}
+
+// CountMessagesInRange counts messages created on local calendar days in
+// [from, to] (both YYYY-MM-DD, inclusive).
+func CountMessagesInRange(db *sql.DB, from, to string) (int64, error) {
 	var n int64
-	err := db.QueryRow(`SELECT COUNT(*) FROM message WHERE date(time_created/1000,'unixepoch','localtime') = ?`, day).Scan(&n)
+	err := db.QueryRow(`SELECT COUNT(*) FROM message WHERE date(time_created/1000,'unixepoch','localtime') >= ? AND date(time_created/1000,'unixepoch','localtime') <= ?`, from, to).Scan(&n)
 	return n, err
 }

@@ -49,7 +49,8 @@ func Summarise(rep DayReport, recent []store.Session, now time.Time) MenuStatus 
 	fmt.Fprintf(&b, "Tokens: %s in / %s out / %s cache",
 		compact(rep.Totals.Input), compact(rep.Totals.Output), compact(rep.Totals.CacheRead))
 	for _, s := range active {
-		fmt.Fprintf(&b, "\n● %s (%s)", s.DisplayTitle, s.Model)
+		fmt.Fprintf(&b, "\n● %s (%s) — %s in / %s out / %s cache",
+			s.DisplayTitle, s.Model, compact(s.Input), compact(s.Output), compact(s.CacheRead))
 	}
 	return MenuStatus{Label: label, Tooltip: b.String(), Active: len(active)}
 }

@@ -10,10 +10,20 @@
 <header>
   <div class="title">opencode-hud <span id="live-dot" class="dot" title="live"></span></div>
   <div class="datenav">
-    <button id="day-prev" title="Previous day">‹</button>
-    <input type="date" id="day-picker">
-    <button id="day-next" title="Next day">›</button>
-    <button id="day-today" hidden>Today</button>
+    <button id="mode-day" class="active" title="Day view">Day</button>
+    <button id="mode-month" title="Month view">Month</button>
+    <span id="day-nav">
+      <button id="day-prev" title="Previous day">‹</button>
+      <input type="date" id="day-picker">
+      <button id="day-next" title="Next day">›</button>
+      <button id="day-today" hidden>Today</button>
+    </span>
+    <span id="month-nav" hidden>
+      <button id="month-prev" title="Previous month">‹</button>
+      <input type="month" id="month-picker">
+      <button id="month-next" title="Next month">›</button>
+      <button id="month-today" hidden>This month</button>
+    </span>
   </div>
 </header>
 <nav>

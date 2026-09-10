@@ -117,6 +117,29 @@ func DaySessions(db *sql.DB, day string) ([]Session, error) {
 	return out, rows.Err()
 }
 
+// RangeSessions lists sessions updated on local calendar days in [from, to]
+// (both YYYY-MM-DD, inclusive).
+func RangeSessions(db *sql.DB, from, to string) ([]Session, error) {
+	rows, err := db.Query(`SELECT `+sessionColumns+`
+		FROM session s LEFT JOIN project p ON p.id = s.project_id
+		WHERE date(s.time_updated/1000, 'unixepoch', 'localtime') >= ?
+		  AND date(s.time_updated/1000, 'unixepoch', 'localtime') <= ?
+		ORDER BY s.time_updated DESC`, from, to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Session
+	for rows.Next() {
+		s, err := scanSession(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
 // RecentSessions lists the most recently updated sessions across all time.
 func RecentSessions(db *sql.DB, limit int) ([]Session, error) {
 	rows, err := db.Query(`SELECT `+sessionColumns+`
